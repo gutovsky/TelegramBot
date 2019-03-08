@@ -70,9 +70,10 @@ def main():
     bot = TBotHandler('774095680:AAHBGJuJa5R2nS3c92zS4C1J5TylQTHVMOg')
     while True:
         updates = bot.get_updates(last_update_id)
-        if len(updates["result"]) > 0:
-            last_update_id = bot.get_last_update_id(updates) + 1
-            bot.echo_all(updates)
+        if 'result' in updates:
+            if len(updates["result"]) > 0:
+                last_update_id = bot.get_last_update_id(updates) + 1
+                bot.echo_all(updates)
         time.sleep(0.5)
 
 
