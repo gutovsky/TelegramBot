@@ -1,6 +1,2 @@
-time
-json
 requests
-urllib.request
-urllib.parse
-urllib.error
+urllib3

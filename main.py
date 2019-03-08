@@ -1,10 +1,7 @@
 import time
 import json
 import requests
-import urllib.request
-import urllib.parse
-import urllib.error
-
+import urllib3
 
 class TBotHandler:
 
@@ -45,7 +42,7 @@ class TBotHandler:
 
     def send_message(self, text, chat_id):
         params = {'text': text, 'chat_id': chat_id}
-        encodedParams = urllib.parse.urlencode(params)
+        encodedParams = urllib3.parse.urlencode(params)
 
         url = self.api_url + "sendMessage?" + encodedParams
         self.get_url(url)
