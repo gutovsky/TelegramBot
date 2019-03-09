@@ -1,84 +1,85 @@
-import time
-import json
-import requests
-import urllib.request
-import urllib.parse
-import urllib.error
+#!/usr/bin/env python
 
 
-class TBotHandler:
+# -*- coding: utf-8 -*-
+# This program is dedicated to the public domain under the CC0 license.
+#
+# THIS EXAMPLE HAS BEEN UPDATED TO WORK WITH THE BETA VERSION 12 OF PYTHON-TELEGRAM-BOT.
+# If you're still using version 11.1.0, please see the examples at
+# https://github.com/python-telegram-bot/python-telegram-bot/tree/v11.1.0/examples
 
-    def __init__(self, token):
-        self.token = token
-        self.api_url = "https://api.telegram.org/bot{}/".format(token)
+"""
+Simple Bot to reply to Telegram messages.
+First, a few handler functions are defined. Then, those functions are passed to
+the Dispatcher and registered at their respective places.
+Then, the bot is started and runs until we press Ctrl-C on the command line.
+Usage:
+Basic Echobot example, repeats messages.
+Press Ctrl-C on the command line or send a signal to the process to stop the
+bot.
+"""
 
-    def get_json_from_url(self, url):
-        content = self.get_url(url)
-        js = json.loads(content)
-        return js
+import logging
 
-    def get_updates(self, offset=None):
-        url = self.api_url + "getUpdates"
-        if offset:
-            url += "?offset={}".format(offset)
-        js = self.get_json_from_url(url)
-        return js
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
-    def echo_all(self, updates):
-        for update in updates["result"]:
-            try:
-                text = update["message"]["text"]
-                chat = update["message"]["chat"]["id"]
-                self.send_message(text, chat)
-            except Exception as e:
-                print(e)
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
 
-    @staticmethod
-    def get_last_chat_id_and_text(updates):
-        num_updates = len(updates["result"])
-        if num_updates == 0:
-            return None, None
-        last_update = num_updates - 1
-        text = updates["result"][last_update]["message"]["text"]
-        chat_id = updates["result"][last_update]["message"]["chat"]["id"]
-        return text, chat_id
+logger = logging.getLogger(__name__)
 
-    def send_message(self, text, chat_id):
-        params = {'text': text, 'chat_id': chat_id}
-        encodedParams = urllib.parse.urlencode(params)
 
-        url = self.api_url + "sendMessage?" + encodedParams
-        self.get_url(url)
+# Define a few command handlers. These usually take the two arguments bot and
+# update. Error handlers also receive the raised TelegramError object in error.
+def start(update, context):
+    """Send a message when the command /start is issued."""
+    update.message.reply_text('Hi!')
 
-    @staticmethod
-    def get_url(url):
-        response = requests.get(url)
-        content = response.content.decode("utf8")
-        return content
 
-    @staticmethod
-    def get_last_update_id(updates):
-        update_ids = []
-        for update in updates["result"]:
-            update_ids.append(int(update["update_id"]))
-        return max(update_ids)
+def help(update, context):
+    """Send a message when the command /help is issued."""
+    update.message.reply_text('Help!')
+
+
+def echo(update, context):
+    """Echo the user message."""
+    update.message.reply_text(update.message.text)
+
+
+def error(update, context):
+    """Log Errors caused by Updates."""
+    logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
 def main():
-    last_update_id = None
+    """Start the bot."""
+    # Create the Updater and pass it your bot's token.
+    # Make sure to set use_context=True to use the new context based callbacks
+    # Post version 12 this will no longer be necessary
+    updater = Updater('774095680:AAHBGJuJa5R2nS3c92zS4C1J5TylQTHVMOg', use_context=True)
 
-    bot = TBotHandler('774095680:AAHBGJuJa5R2nS3c92zS4C1J5TylQTHVMOg')
-    while True:
-        updates = bot.get_updates(last_update_id)
-        if 'result' in updates:
-            if len(updates["result"]) > 0:
-                last_update_id = bot.get_last_update_id(updates) + 1
-                bot.echo_all(updates)
-        time.sleep(0.5)
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
+
+    # on different commands - answer in Telegram
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("help", help))
+
+    # on noncommand i.e message - echo the message on Telegram
+    dp.add_handler(MessageHandler(Filters.text, echo))
+
+    # log all errors
+    dp.add_error_handler(error)
+
+    # Start the Bot
+    updater.start_polling()
+
+    # Run the bot until you press Ctrl-C or the process receives SIGINT,
+    # SIGTERM or SIGABRT. This should be used most of the time, since
+    # start_polling() is non-blocking and will stop the bot gracefully.
+    updater.idle()
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        exit()
+    main()
